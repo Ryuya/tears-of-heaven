@@ -75,7 +75,7 @@ const eqT=items=>{const m={};items.forEach(it=>it.stats.forEach(s=>{m[s.k]=(m[s.
 
 const RL=[
   {id:0,name:"涙の祝福",desc:"カーソル範囲+4",icon:"💧",bc:30,cm:1.55},
-  {id:1,name:"涙の怒り",desc:"カーソル威力+1 / +8%",icon:"🗡",bc:40,cm:1.6},
+  {id:1,name:"涙の怒り",desc:"カーソル威力+0.5 / +3%",icon:"🗡",bc:40,cm:1.6},
   {id:2,name:"豊穣の恵み",desc:"涙獲得+10%",icon:"🌾",bc:50,cm:1.7},
   {id:3,name:"植物の活力",desc:"タワー攻撃+8%",icon:"🌿",bc:55,cm:1.65},
   {id:4,name:"生命の加護",desc:"種HP+20",icon:"❤️",bc:40,cm:1.5},
@@ -92,7 +92,7 @@ const BUFF_TYPES=[{id:"fury",name:"怒涛",desc:"カーソル威力x3",dur:5,col
 const mkRun=(tgt,rlv,equipped,grave)=>{
   const et=eqT(equipped);const coreBase=150+(rlv[4]||0)*20+(et.core_hp||0);
   return{tears:0,wave:0,tgt,zombies:[],towers:[],parts:[],projs:[],drops:[],mx:-300,my:-300,
-    cR:36+(rlv[0]||0)*4+(et.cur_range||0),cD:1+(rlv[1]||0)*1+(et.cur_dmg_f||0),cDp:1+(rlv[1]||0)*0.08+(et.cur_dmg_p||0)/100,
+    cR:36+(rlv[0]||0)*4+(et.cur_range||0),cD:1+(rlv[1]||0)*0.5+(et.cur_dmg_f||0),cDp:1+(rlv[1]||0)*0.03+(et.cur_dmg_p||0)/100,
     kills:0,sQs:[],sel:null,placing:false,lt:0,coreHp:coreBase,coreMax:coreBase,coreReg:(et.core_reg||0),coreShield:Math.min(80,et.core_shield||0),
     go:false,vic:false,wPause:0,wActive:false,rlv,eq:equipped,et,
     twD:1+(rlv[3]||0)*8/100+(et.tw_dmg_p||0)/100+(et.all_dmg_p||0)/100,twS:1+(rlv[6]||0)*6/100+(et.tw_spd_p||0)/100,

@@ -38,6 +38,7 @@ const SD={
   tw_chain:{l:"雷鎖%",f:v=>v.toFixed(0)+"%",c:"#38bdf8",d:"タワー攻撃時にこの確率で近くの敵2体に40%ダメージ連鎖"},
   tw_heal:{l:"生命吸収%",f:v=>v.toFixed(0)+"%",c:"#86efac",d:"タワー攻撃時にこの確率で種のHPを少量回復"},
   tw_gold:{l:"涙搾取%",f:v=>v.toFixed(0)+"%",c:"#fbbf24",d:"タワー攻撃時にこの確率でボーナス涙を獲得"},
+  tw_max:{l:"タワー上限",f:v=>"+"+v.toFixed(0),c:"#fde047",d:"設置できるタワーの最大数が増加"},
 };
 const sf=k=>SD[k]||{l:k,f:v=>""+v,c:"#888",d:""};
 const rv=v=>Math.round(v*10)/10;
@@ -58,8 +59,9 @@ const STAT_V={
   crit:[2,4,8,14,22],chain_kill:[2,5,10,18,30],kill_buff:[5,10,18,28,45],
   aura_dmg:[10,20,35,55,80],aura_spd:[8,15,25,40,60],
   tw_splash:[3,6,12,20,35],tw_chain:[3,6,12,20,35],tw_heal:[3,6,10,16,25],tw_gold:[4,8,15,25,40],
+  tw_max:[1,2,3,5,8],
 };
-const NORMAL_STATS=["cur_dmg_f","cur_dmg_p","cur_range","tw_dmg_p","tw_spd_p","tw_hp_p","tear_p","core_hp","core_reg","drop_up","crit","mark_tower","wave_wipe","chain_kill","kill_buff","aura_dmg","aura_spd","tw_splash","tw_chain","tw_heal","tw_gold"];
+const NORMAL_STATS=["cur_dmg_f","cur_dmg_p","cur_range","tw_dmg_p","tw_spd_p","tw_hp_p","tear_p","core_hp","core_reg","drop_up","crit","mark_tower","wave_wipe","chain_kill","kill_buff","aura_dmg","aura_spd","tw_splash","tw_chain","tw_heal","tw_gold","tw_max"];
 const BOSS_STATS=["cur_dmg_f","all_dmg_p","core_shield","mark_tower","wave_wipe","chain_kill","kill_buff","crit","aura_dmg","tw_splash","tw_chain"];
 
 let _u=1;
@@ -100,7 +102,7 @@ const mkRun=(tgt,rlv,equipped,grave)=>{
     costP:1-Math.min(0.48,(rlv[7]||0)*0.04),dropUp:(et.drop_up||0)/100,markTower:(et.mark_tower||0)/100,
     waveWipe:(et.wave_wipe||0)/100,critCh:(et.crit||0)/100,chainKill:(et.chain_kill||0)/100,killBuff:(et.kill_buff||0)/100,
     auraDmg:(et.aura_dmg||0)/100,auraSpd:(et.aura_spd||0)/100,twSplash:(et.tw_splash||0)/100,twChain:(et.tw_chain||0)/100,
-    twHeal:(et.tw_heal||0)/100,twGold:(et.tw_gold||0)/100,luck:(rlv[9]||0),
+    twHeal:(et.tw_heal||0)/100,twGold:(et.tw_gold||0)/100,luck:(rlv[9]||0),maxTowers:MAX_TOWERS+(et.tw_max||0),
     runDrops:[],newDrops:[],grave:grave||null,buffs:[],_wipeTriggered:false,_chainPending:0,dmgNums:[],
   };
 };
@@ -162,11 +164,11 @@ export default function Game(){
   const [synA,setSynA]=useState(null);const [synB,setSynB]=useState(null);
   const [runTab,setRunTab]=useState(0);
   const [grave,setGrave]=useState(null);
-  const [ui,setUi]=useState({t:0,w:0,zn:0,tw:0,pl:false,chp:100,cm:100,go:false,vic:false,nDrop:0,canRush:false,buffs:[]});
+  const [ui,setUi]=useState({t:0,w:0,zn:0,tw:0,tm:MAX_TOWERS,pl:false,chp:100,cm:100,go:false,vic:false,nDrop:0,canRush:false,buffs:[]});
   const [,bump]=useState(0);
 
   const maxSlots=()=>3+(rlv[8]||0);
-  const sync=()=>{if(!gs.current)return;const s=gs.current;setUi({t:Math.floor(s.tears),w:s.wave,zn:s.zombies.length,tw:s.towers.length,pl:s.placing,chp:Math.ceil(s.coreHp),cm:s.coreMax,go:s.go,vic:s.vic,nDrop:s.runDrops.length,canRush:!s.go&&!s.vic&&s.wave<s.tgt,buffs:s.buffs.map(b=>({...b}))});};
+  const sync=()=>{if(!gs.current)return;const s=gs.current;setUi({t:Math.floor(s.tears),w:s.wave,zn:s.zombies.length,tw:s.towers.length,tm:s.maxTowers,pl:s.placing,chp:Math.ceil(s.coreHp),cm:s.coreMax,go:s.go,vic:s.vic,nDrop:s.runDrops.length,canRush:!s.go&&!s.vic&&s.wave<s.tgt,buffs:s.buffs.map(b=>({...b}))});};
   const toggleEquip=item=>{if(equipped.find(e=>e.uid===item.uid))setEquipped(p=>p.filter(e=>e.uid!==item.uid));else if(equipped.length<maxSlots())setEquipped(p=>[...p,item]);};
   const buyRelic=rid=>{const r=RL[rid];const lv=rlv[rid];if(r.mx&&lv>=r.mx)return;const cost=rlC(r,lv);if(tears>=cost){setTears(t=>t-cost);setRlv(p=>{const n=[...p];n[rid]++;return n;});}};
   const doSynth=()=>{if(!synA||!synB)return;const res=synthResult(synA,synB);if(!res)return;setStash(p=>[...p.filter(e=>e.uid!==synA.uid&&e.uid!==synB.uid),res]);setEquipped(p=>p.filter(e=>e.uid!==synA.uid&&e.uid!==synB.uid));setSynA(null);setSynB(null);};
@@ -227,7 +229,7 @@ export default function Game(){
         const cd2=Math.hypot(z.x-s.mx,z.y-s.my);if(cd2<ecR){let dmg=ecD*dt*25;let isCrit=false;if(s.critCh>0&&Math.random()<s.critCh*dt*5){dmg*=5;isCrit=true;s.parts.push({x:z.x,y:z.y-z.sz-10,vx:0,vy:-20,life:0.5,col:"#ef4444",sz:3});}z.hp-=dmg;
           z._accDmg=(z._accDmg||0)+dmg;z._accT=(z._accT||0)+dt;
           if(z._accT>=0.3||isCrit){if(s.dmgNums.length<30)s.dmgNums.push({x:z.x+(Math.random()-0.5)*10,y:z.y-z.sz-5,v:Math.floor(z._accDmg)+(isCrit?" CRIT!":""),col:isCrit?"#ef4444":"#93c5fd",t:0.8,big:isCrit});z._accDmg=0;z._accT=0;}
-          z.markT+=dt;if(z.markT>=0.2&&s.markTower>0&&s.towers.length<MAX_TOWERS){z.markT=0;if(Math.random()<s.markTower){const tid=Math.floor(Math.random()*4);s.towers.push({x:z.x+(Math.random()-0.5)*40,y:z.y+(Math.random()-0.5)*40,tid,hp:Math.floor(TT[tid].mhp*s.twH),cd:0});s.newDrops.push({special:"🏗 召喚!",t:1.2,x:z.x,y:z.y-25});}}}else{z.markT=Math.max(0,z.markT-dt*2);}
+          z.markT+=dt;if(z.markT>=0.2&&s.markTower>0&&s.towers.length<s.maxTowers){z.markT=0;if(Math.random()<s.markTower){const tid=Math.floor(Math.random()*4);s.towers.push({x:z.x+(Math.random()-0.5)*40,y:z.y+(Math.random()-0.5)*40,tid,hp:Math.floor(TT[tid].mhp*s.twH),cd:0});s.newDrops.push({special:"🏗 召喚!",t:1.2,x:z.x,y:z.y-25});}}}else{z.markT=Math.max(0,z.markT-dt*2);}
         let slowed=false;for(const t of s.towers){if(TT[t.tid].eff==="wall"&&t.hp>0&&Math.hypot(z.x-t.x,z.y-t.y)<55){slowed=true;break;}}
         if(slowed&&!z.atk){const d2=Math.hypot(CX-z.x,CY-z.y);if(d2>1){z.x-=((CX-z.x)/d2)*z.spd*dt*0.35;z.y-=((CY-z.y)/d2)*z.spd*dt*0.35;}}
         if(z.hp<=0){onKill(s,z);s.zombies.splice(i,1);}}
@@ -258,7 +260,7 @@ export default function Game(){
 
   const hM=e=>{if(!cv.current||!gs.current)return;const r=cv.current.getBoundingClientRect();gs.current.mx=(e.clientX-r.left)*(W/r.width);gs.current.my=(e.clientY-r.top)*(H/r.height);};
   const hL=()=>{if(gs.current)gs.current.mx=-300;};
-  const hC=e=>{const s=gs.current;if(!s||!s.placing||s.sel===null)return;const r=cv.current.getBoundingClientRect();const fx=(e.clientX-r.left)*(W/r.width),fy=(e.clientY-r.top)*(H/r.height);if(Math.hypot(fx-CX,fy-CY)<30)return;if(s.towers.length>=MAX_TOWERS)return;const tp=TT[s.sel];const cost=Math.floor(tp.cost*s.costP);if(s.tears>=cost){s.tears-=cost;s.towers.push({x:fx,y:fy,tid:tp.id,hp:Math.floor(tp.mhp*s.twH),cd:0});}};
+  const hC=e=>{const s=gs.current;if(!s||!s.placing||s.sel===null)return;const r=cv.current.getBoundingClientRect();const fx=(e.clientX-r.left)*(W/r.width),fy=(e.clientY-r.top)*(H/r.height);if(Math.hypot(fx-CX,fy-CY)<30)return;if(s.towers.length>=s.maxTowers)return;const tp=TT[s.sel];const cost=Math.floor(tp.cost*s.costP);if(s.tears>=cost){s.tears-=cost;s.towers.push({x:fx,y:fy,tid:tp.id,hp:Math.floor(tp.mhp*s.twH),cd:0});}};
   const selT=id=>{const s=gs.current;if(s.sel===id&&s.placing){s.placing=false;s.sel=null;}else{s.sel=id;s.placing=true;}sync();};
 
   const css={root:{maxWidth:780,margin:"0 auto",fontFamily:"'Palatino Linotype','Book Antiqua','Georgia',serif",background:"#060a06",borderRadius:10,overflow:"hidden",color:"#c8d6c8"},panel:{background:"linear-gradient(180deg,#0b120b,#090e09)",borderBottom:"1px solid #162016"},hdr:{padding:"14px 20px",background:"radial-gradient(ellipse at 50% 0%,rgba(59,130,246,0.06),transparent 70%)",textAlign:"center",borderBottom:"1px solid #162016"}};
@@ -348,7 +350,7 @@ export default function Game(){
         <span>W<b style={{color:"#e2e8f0"}}>{ui.w}</b><span style={{color:"#333"}}>/{s?.tgt||target}</span></span>
         <span>🧟{ui.zn}</span>
         <span style={{color:ui.chp/ui.cm>0.5?"#fbbf24":ui.chp/ui.cm>0.25?"#f97316":"#ef4444"}}>❤️{ui.chp}/{ui.cm}</span>
-        <span style={{color:ui.tw>=MAX_TOWERS?"#ef4444":"#6b8f6b"}}>🏗{ui.tw}/{MAX_TOWERS}</span>
+        <span style={{color:ui.tw>=ui.tm?"#ef4444":"#6b8f6b"}}>🏗{ui.tw}/{ui.tm}</span>
         {ui.nDrop>0&&<span style={{color:"#f9a8d4"}}>🎒{ui.nDrop}</span>}
       </div>
       <div style={{display:"flex",gap:4}}>

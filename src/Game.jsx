@@ -102,7 +102,7 @@ const mkRun=(tgt,rlv,equipped,grave)=>{
     costP:1-Math.min(0.48,(rlv[7]||0)*0.04),dropUp:(et.drop_up||0)/100,markTower:(et.mark_tower||0)/100,
     waveWipe:(et.wave_wipe||0)/100,critCh:(et.crit||0)/100,chainKill:(et.chain_kill||0)/100,killBuff:(et.kill_buff||0)/100,
     auraDmg:(et.aura_dmg||0)/100,auraSpd:(et.aura_spd||0)/100,twSplash:(et.tw_splash||0)/100,twChain:(et.tw_chain||0)/100,
-    twHeal:(et.tw_heal||0)/100,twGold:(et.tw_gold||0)/100,luck:(rlv[9]||0),maxTowers:MAX_TOWERS+(et.tw_max||0),
+    twHeal:(et.tw_heal||0)/100,twGold:(et.tw_gold||0)/100,luck:(rlv[9]||0),maxTowers:Math.min(200,MAX_TOWERS+(et.tw_max||0)),
     runDrops:[],newDrops:[],grave:grave||null,buffs:[],_wipeTriggered:false,_chainPending:0,dmgNums:[],
   };
 };

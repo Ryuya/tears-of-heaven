@@ -31,7 +31,7 @@ const SD={
   wave_wipe:{l:"天罰確率%",f:v=>v.toFixed(1)+"%",c:"#facc15",d:"敵を倒す度にこの確率で全敵が即死する"},
   crit:{l:"会心率%",f:v=>v.toFixed(1)+"%",c:"#ef4444",d:"カーソル攻撃が5倍ダメージになる確率"},
   chain_kill:{l:"連鎖処刑%",f:v=>v.toFixed(1)+"%",c:"#f43f5e",d:"敵を倒した時に別のランダムな敵も即死する確率"},
-  kill_buff:{l:"キルバフ%",f:v=>v.toFixed(0)+"%",c:"#22d3ee",d:"敵を倒した時にランダムな一時バフを得る確率"},
+  kill_buff:{l:"キルバフ%",f:v=>v.toFixed(1)+"%",c:"#22d3ee",d:"敵を倒した時にランダムな一時バフを得る確率"},
   aura_dmg:{l:"光カーソル攻撃%",f:v=>"+"+Math.round(v)+"%",c:"#fcd34d",d:"カーソル範囲内のタワーの攻撃力を%で増加"},
   aura_spd:{l:"光カーソル速度%",f:v=>"+"+Math.round(v)+"%",c:"#fde68a",d:"カーソル範囲内のタワーの攻撃速度を%で増加"},
   tw_splash:{l:"爆裂弾%",f:v=>v.toFixed(0)+"%",c:"#fb923c",d:"タワー攻撃時にこの確率で周囲の敵にも50%ダメージ"},
@@ -41,10 +41,10 @@ const SD={
   tw_max:{l:"タワー上限",f:v=>"+"+v.toFixed(0),c:"#fde047",d:"設置できるタワーの最大数が増加"},
   tw_slow:{l:"鈍化%",f:v=>v.toFixed(0)+"%",c:"#67e8f9",d:"タワー攻撃時にこの確率で1.5秒の鈍化を付与"},
   cur_clone:{l:"分身%",f:v=>v.toFixed(1)+"%",c:"#a5b4fc",d:"敵を倒した時にこの確率でカーソル分身が4秒出現"},
-  kb_fury:{l:"怒涛バフ%",f:v=>v.toFixed(0)+"%",c:"#ef4444",d:"敵を倒した時にこの確率で「怒涛」バフを獲得"},
-  kb_haste:{l:"迅雷バフ%",f:v=>v.toFixed(0)+"%",c:"#22d3ee",d:"敵を倒した時にこの確率で「迅雷」バフを獲得"},
-  kb_rain:{l:"豪雨バフ%",f:v=>v.toFixed(0)+"%",c:"#60a5fa",d:"敵を倒した時にこの確率で「豪雨」バフを獲得"},
-  kb_shield:{l:"神護バフ%",f:v=>v.toFixed(0)+"%",c:"#fbbf24",d:"敵を倒した時にこの確率で「神護」バフを獲得"},
+  kb_fury:{l:"怒涛バフ%",f:v=>v.toFixed(1)+"%",c:"#ef4444",d:"敵を倒した時にこの確率で「怒涛」バフを獲得"},
+  kb_haste:{l:"迅雷バフ%",f:v=>v.toFixed(1)+"%",c:"#22d3ee",d:"敵を倒した時にこの確率で「迅雷」バフを獲得"},
+  kb_rain:{l:"豪雨バフ%",f:v=>v.toFixed(1)+"%",c:"#60a5fa",d:"敵を倒した時にこの確率で「豪雨」バフを獲得"},
+  kb_shield:{l:"神護バフ%",f:v=>v.toFixed(1)+"%",c:"#fbbf24",d:"敵を倒した時にこの確率で「神護」バフを獲得"},
 };
 const sf=k=>SD[k]||{l:k,f:v=>""+v,c:"#888",d:""};
 const rv=v=>Math.round(v*10)/10;
@@ -62,11 +62,11 @@ const STAT_V={
   tear_p:[8,15,25,40,70],core_hp:[10,25,50,90,150],core_reg:[0.5,1,2,3.5,6],
   all_dmg_p:[3,7,12,20,35],core_shield:[3,6,10,16,25],
   drop_up:[1,2,3.5,5,8],mark_tower:[5,10,18,30,50],wave_wipe:[0.1,0.2,0.4,0.7,1.2],
-  crit:[2,4,8,14,22],chain_kill:[2,5,10,18,30],kill_buff:[2,5,10,16,25],
+  crit:[2,4,8,14,22],chain_kill:[2,5,10,18,30],kill_buff:[0.5,1,1.8,2.5,3.5],
   aura_dmg:[10,20,35,55,80],aura_spd:[8,15,25,40,60],
   tw_splash:[3,6,12,20,35],tw_chain:[3,6,12,20,35],tw_heal:[3,6,10,16,25],tw_gold:[4,8,15,25,40],
   tw_max:[1,2,3,5,8],tw_slow:[4,8,15,25,40],cur_clone:[0.3,0.6,1,1.5,2.2],
-  kb_fury:[3,6,12,18,28],kb_haste:[3,6,12,18,28],kb_rain:[3,6,12,18,28],kb_shield:[2,4,8,12,18],
+  kb_fury:[0.3,0.6,1.2,2,3],kb_haste:[0.3,0.6,1.2,2,3],kb_rain:[0.3,0.6,1.2,2,3],kb_shield:[0.2,0.4,0.8,1.4,2],
 };
 const NORMAL_STATS=["cur_dmg_f","cur_dmg_p","cur_range","tw_dmg_p","tw_spd_p","tw_hp_p","tear_p","core_hp","core_reg","drop_up","crit","mark_tower","wave_wipe","chain_kill","kill_buff","aura_dmg","aura_spd","tw_splash","tw_chain","tw_heal","tw_gold","tw_max","tw_slow","cur_clone","kb_fury","kb_haste","kb_rain","kb_shield"];
 const BOSS_STATS=["cur_dmg_f","all_dmg_p","core_shield","mark_tower","wave_wipe","chain_kill","kill_buff","crit","aura_dmg","tw_splash","tw_chain"];
@@ -193,6 +193,7 @@ export default function Game(){
   const spawn1=useCallback((wn,rem)=>{const s=gs.current;const side=Math.random()*4|0;let x,y;if(side===0){x=Math.random()*W;y=-18}else if(side===1){x=W+18;y=Math.random()*H}else if(side===2){x=Math.random()*W;y=H+18}else{x=-18;y=Math.random()*H}const hp=wHp(wn);const boss=wn%10===0&&rem===1;const bm=boss?5:1;const hpVar=boss?1:0.8+Math.random()*0.5;const fHp=hp*bm*hpVar;s.zombies.push({x,y,hp:fHp,mhp:fHp,spd:wSpd(wn)+(Math.random()-0.5)*8,val:Math.floor((2+wn*0.7)*s.tearP*bm*hpVar),sz:boss?22:10+Math.random()*3+(hpVar-1)*4,boss,atk:null,atkT:0,dropR:boss?1:Math.min(0.35,0.04+wn*0.002)+s.dropUp,markT:0});},[]);
   const startW=useCallback(wn=>{const s=gs.current;s.wave=wn;s.sQs.push({w:wn,rem:wZ(wn),t:0.3,iv:Math.max(0.12,10/wZ(wn))});s.wActive=true;if(s.grave&&wn>=s.grave.wave){s.runDrops.push(...s.grave.items);s.newDrops.push({special:"🔄 ロスト装備を回収!",t:3,x:CX,y:CY-60});s.grave=null;}},[]);
   const rushW=useCallback(()=>{const s=gs.current;if(!s||s.go||s.vic||s.wave>=s.tgt)return;const nxt=s.wave+1;s.wave=nxt;s.sQs.push({w:nxt,rem:wZ(nxt),t:0,iv:Math.max(0.12,10/wZ(nxt))});s.wActive=true;if(s.grave&&nxt>=s.grave.wave){s.runDrops.push(...s.grave.items);s.newDrops.push({special:"🔄 ロスト装備を回収!",t:3,x:CX,y:CY-60});s.grave=null;}sync();},[]);
+  const rushAllW=useCallback(()=>{const s=gs.current;if(!s||s.go||s.vic||s.wave>=s.tgt)return;for(let w=s.wave+1;w<=s.tgt;w++){s.sQs.push({w,rem:wZ(w),t:0,iv:Math.max(0.12,10/wZ(w))});}s.wave=s.tgt;s.wActive=true;if(s.grave){s.runDrops.push(...s.grave.items);s.newDrops.push({special:"🔄 ロスト装備を回収!",t:3,x:CX,y:CY-60});s.grave=null;}sync();},[]);
 
   // Kill flags processed AFTER zombie loop
   const onKill=useCallback((s,z)=>{
@@ -375,6 +376,7 @@ export default function Game(){
       </div>
       <div style={{display:"flex",gap:4}}>
         <GlowBtn on={rushW} dis={!ui.canRush} color="#d97706" style={{padding:"3px 10px",fontSize:10}}>⚡追加</GlowBtn>
+        <GlowBtn on={rushAllW} dis={!ui.canRush} color="#b91c1c" style={{padding:"3px 10px",fontSize:10}}>⚡全</GlowBtn>
         {(ui.go||ui.vic)&&<GlowBtn on={()=>setPhase("result")} color="#6366f1" style={{fontSize:10}}>結果</GlowBtn>}
       </div>
     </div>

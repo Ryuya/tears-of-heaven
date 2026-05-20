@@ -207,7 +207,7 @@ export default function Game(){
     if(s.kbHaste>0&&Math.random()<s.kbHaste)addBuff(BUFF_TYPES[1]);
     if(s.kbRain>0&&Math.random()<s.kbRain)addBuff(BUFF_TYPES[2]);
     if(s.kbShield>0&&Math.random()<s.kbShield)addBuff(BUFF_TYPES[3]);
-    if(s.curClone>0&&Math.random()<s.curClone)s.clone={x:z.x,y:z.y,t:4};
+    if(s.curClone>0&&Math.random()<s.curClone){const ang=Math.random()*Math.PI*2,spd=90;s.clone={x:CX+(Math.random()-0.5)*180,y:CY+(Math.random()-0.5)*120,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd,t:4};}
     if(s.parts.length<300){const n=z.boss?12:4;for(let p=0;p<n;p++)s.parts.push({x:z.x,y:z.y,vx:(Math.random()-0.5)*90,vy:(Math.random()-0.5)*90,life:0.6+Math.random()*0.4,col:z.boss?"#fbbf24":"#86efac",sz:z.boss?4:2.5});}
   },[]);
 
@@ -217,7 +217,7 @@ export default function Game(){
       const dt=Math.min((now-s.lt)/1000,0.05);s.lt=now;
       if(s.go||s.vic){render(ctx,s);ut+=dt;if(ut>0.2){ut=0;sync();}anim=requestAnimationFrame(loop);return;}
       const hasBuff=id=>s.buffs.some(b=>b.id===id);for(let i=s.buffs.length-1;i>=0;i--){s.buffs[i].rem-=dt;if(s.buffs[i].rem<=0)s.buffs.splice(i,1);}
-      if(s.clone){s.clone.t-=dt;if(s.clone.t<=0)s.clone=null;}
+      if(s.clone){s.clone.t-=dt;if(s.clone.t<=0)s.clone=null;else{s.clone.x+=s.clone.vx*dt;s.clone.y+=s.clone.vy*dt;const cxMin=150,cxMax=W-150,cyMin=100,cyMax=H-100;if(s.clone.x<cxMin){s.clone.x=cxMin;s.clone.vx=-s.clone.vx;}else if(s.clone.x>cxMax){s.clone.x=cxMax;s.clone.vx=-s.clone.vx;}if(s.clone.y<cyMin){s.clone.y=cyMin;s.clone.vy=-s.clone.vy;}else if(s.clone.y>cyMax){s.clone.y=cyMax;s.clone.vy=-s.clone.vy;}}}
       const bF=hasBuff("fury")?3:1,bH=hasBuff("haste")?2:1,bR=hasBuff("rain")?2:1,bS=hasBuff("shield");
       let cBR=0,cBD=0;for(const t of s.towers){if(TT[t.tid].eff==="cursor"&&t.hp>0){cBR+=12;cBD+=0.35;}}
       const ecR=(s.cR+cBR)*bR,ecD=(s.cD+cBD)*s.cDp*bF;

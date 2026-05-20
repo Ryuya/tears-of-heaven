@@ -40,7 +40,7 @@ const SD={
   tw_gold:{l:"涙搾取%",f:v=>v.toFixed(0)+"%",c:"#fbbf24",d:"タワー攻撃時にこの確率でボーナス涙を獲得"},
   tw_max:{l:"タワー上限",f:v=>"+"+v.toFixed(0),c:"#fde047",d:"設置できるタワーの最大数が増加"},
   tw_slow:{l:"鈍化%",f:v=>v.toFixed(0)+"%",c:"#67e8f9",d:"タワー攻撃時にこの確率で1.5秒の鈍化を付与"},
-  cur_clone:{l:"分身%",f:v=>v.toFixed(0)+"%",c:"#a5b4fc",d:"敵を倒した時にこの確率でカーソル分身が4秒出現"},
+  cur_clone:{l:"分身%",f:v=>v.toFixed(1)+"%",c:"#a5b4fc",d:"敵を倒した時にこの確率でカーソル分身が4秒出現"},
   kb_fury:{l:"怒涛バフ%",f:v=>v.toFixed(0)+"%",c:"#ef4444",d:"敵を倒した時にこの確率で「怒涛」バフを獲得"},
   kb_haste:{l:"迅雷バフ%",f:v=>v.toFixed(0)+"%",c:"#22d3ee",d:"敵を倒した時にこの確率で「迅雷」バフを獲得"},
   kb_rain:{l:"豪雨バフ%",f:v=>v.toFixed(0)+"%",c:"#60a5fa",d:"敵を倒した時にこの確率で「豪雨」バフを獲得"},
@@ -65,7 +65,7 @@ const STAT_V={
   crit:[2,4,8,14,22],chain_kill:[2,5,10,18,30],kill_buff:[2,5,10,16,25],
   aura_dmg:[10,20,35,55,80],aura_spd:[8,15,25,40,60],
   tw_splash:[3,6,12,20,35],tw_chain:[3,6,12,20,35],tw_heal:[3,6,10,16,25],tw_gold:[4,8,15,25,40],
-  tw_max:[1,2,3,5,8],tw_slow:[4,8,15,25,40],cur_clone:[3,6,12,20,35],
+  tw_max:[1,2,3,5,8],tw_slow:[4,8,15,25,40],cur_clone:[0.3,0.6,1,1.5,2.2],
   kb_fury:[3,6,12,18,28],kb_haste:[3,6,12,18,28],kb_rain:[3,6,12,18,28],kb_shield:[2,4,8,12,18],
 };
 const NORMAL_STATS=["cur_dmg_f","cur_dmg_p","cur_range","tw_dmg_p","tw_spd_p","tw_hp_p","tear_p","core_hp","core_reg","drop_up","crit","mark_tower","wave_wipe","chain_kill","kill_buff","aura_dmg","aura_spd","tw_splash","tw_chain","tw_heal","tw_gold","tw_max","tw_slow","cur_clone","kb_fury","kb_haste","kb_rain","kb_shield"];

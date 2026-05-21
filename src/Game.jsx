@@ -93,11 +93,18 @@ const RL=[
   {id:7,name:"経済の知恵",desc:"コスト-4%",icon:"💰",bc:80,cm:1.9,mx:12},
   {id:8,name:"装備拡張",desc:"スロット+1",icon:"🎒",bc:120,cm:2.2,mx:5},
   {id:9,name:"運命の導き",desc:"レア度UP",icon:"🔮",bc:100,cm:2.0,mx:10},
+  {id:10,name:"朝露の蓄え",desc:"開始涙+15",icon:"🌧",bc:45,cm:1.55,mx:20},
+  {id:11,name:"開拓の芽",desc:"開始時に涙の芽+1",icon:"🌱",bc:90,cm:2.0,mx:5},
+  {id:12,name:"弱点看破",desc:"特殊敵/ボスへの攻撃+4%",icon:"👁",bc:70,cm:1.7,mx:25},
+  {id:13,name:"奇跡の結界",desc:"致命傷を1回防ぎHP30%回復",icon:"🛡",bc:180,cm:2.3,mx:3},
+  {id:14,name:"ボスの供物",desc:"ボス撃破涙+20%",icon:"👑",bc:100,cm:1.8,mx:10},
+  {id:15,name:"墓標の導き",desc:"死亡時の装備ロスト-1",icon:"🪦",bc:130,cm:2.0,mx:3},
+  {id:16,name:"嵐の予兆",desc:"Wave開始時バフ+3%",icon:"🌩",bc:85,cm:1.75,mx:10},
 ];
 const rlC=(r,lv)=>Math.floor(r.bc*Math.pow(r.cm,lv));
 const wZ=w=>6+w*3,wHp=w=>Math.floor((8+w*5)*(1+(w-1)*0.25)),wSpd=w=>20+Math.min(w*0.6,30);
 const waveExpectedHp=w=>{const n=wZ(w);const bh=wHp(w);const isB=w%10===0;const bossHp=isB?bh*5:0;const normalCount=isB?n-1:n;const tm=w<4?1.0:w<7?0.9:w<12?1.008:0.974;return Math.round(normalCount*bh*tm*1.05+bossHp);};
-const computeCombatPower=(rlv,equipped)=>{const et=eqT(equipped);const cD=1+(rlv[1]||0)*0.5+(et.cur_dmg_f||0);const cDp=1+(rlv[1]||0)*0.03+(et.cur_dmg_p||0)/100+(et.all_dmg_p||0)/100;const cR=36+(rlv[0]||0)*4+(et.cur_range||0);const twD=1+(rlv[3]||0)*0.08+(et.tw_dmg_p||0)/100+(et.all_dmg_p||0)/100;const twS=1+(rlv[6]||0)*0.06+(et.tw_spd_p||0)/100;const coreMax=150+(rlv[4]||0)*20+(et.core_hp||0);const coreReg=et.core_reg||0;const coreShield=Math.min(80,et.core_shield||0);const tearP=1+(rlv[2]||0)*0.1+(et.tear_p||0)/100;const crit=(et.crit||0)/100;const waveWipe=(et.wave_wipe||0)/100;const chainKill=(et.chain_kill||0)/100;const cursorPot=cD*cDp*25*10*Math.sqrt(cR/36)*(1+crit*2);const towerPot=Math.max(0,twD*twS-1)*80;const survBudget=Math.max(0,coreMax-150)*0.5+coreReg*5+coreShield*2;const wipeBonus=waveWipe*30000;const chainMul=1+chainKill*0.3;const ecoMul=Math.pow(tearP,0.4);return Math.round((cursorPot+towerPot+200+survBudget+wipeBonus)*chainMul*ecoMul);};
+const computeCombatPower=(rlv,equipped)=>{const et=eqT(equipped);const cD=1+(rlv[1]||0)*0.5+(et.cur_dmg_f||0);const cDp=1+(rlv[1]||0)*0.03+(et.cur_dmg_p||0)/100+(et.all_dmg_p||0)/100;const cR=36+(rlv[0]||0)*4+(et.cur_range||0);const twD=1+(rlv[3]||0)*0.08+(et.tw_dmg_p||0)/100+(et.all_dmg_p||0)/100;const twS=1+(rlv[6]||0)*0.06+(et.tw_spd_p||0)/100;const coreMax=150+(rlv[4]||0)*20+(et.core_hp||0);const coreReg=et.core_reg||0;const coreShield=Math.min(80,et.core_shield||0);const tearP=1+(rlv[2]||0)*0.1+(et.tear_p||0)/100;const crit=(et.crit||0)/100;const waveWipe=(et.wave_wipe||0)/100;const chainKill=(et.chain_kill||0)/100;const specialD=1+(rlv[12]||0)*0.04;const cursorPot=cD*cDp*specialD*25*10*Math.sqrt(cR/36)*(1+crit*2);const towerPot=Math.max(0,twD*twS*specialD-1)*80;const survBudget=Math.max(0,coreMax-150)*0.5+coreReg*5+coreShield*2+(rlv[13]||0)*120;const wipeBonus=waveWipe*30000;const chainMul=1+chainKill*0.3;const ecoMul=Math.pow(tearP*(1+(rlv[14]||0)*0.04),0.4);return Math.round((cursorPot+towerPot+200+survBudget+wipeBonus+(rlv[10]||0)*8+(rlv[11]||0)*60)*chainMul*ecoMul);};
 const BUFF_TYPES=[{id:"fury",name:"怒涛",desc:"カーソル威力x3",dur:5,col:"#ef4444"},{id:"haste",name:"迅雷",desc:"タワー速度x2",dur:5,col:"#22d3ee"},{id:"rain",name:"豪雨",desc:"カーソル範囲x2",dur:5,col:"#60a5fa"},{id:"shield",name:"神護",desc:"種無敵",dur:3,col:"#fbbf24"}];
 const ETYPES={
   basic: {hpMul:1.0,spdMul:1.0,szBase:10,armor:1.0,drop:1.0},
@@ -142,19 +149,21 @@ const drawWalk=(ctx,img,type,x,y,w,h,now,phase=0)=>{
 };
 
 const mkRun=(tgt,rlv,equipped,grave)=>{
-  const et=eqT(equipped);const coreBase=150+(rlv[4]||0)*20+(et.core_hp||0);
-  return{tears:0,wave:0,tgt,zombies:[],towers:[],parts:[],projs:[],drops:[],mx:-300,my:-300,
+  const et=eqT(equipped);const coreBase=150+(rlv[4]||0)*20+(et.core_hp||0),twH=1+(rlv[5]||0)*10/100+(et.tw_hp_p||0)/100;
+  const starter=Array.from({length:rlv[11]||0},(_,i)=>{const a=-Math.PI/2+i*Math.PI*2/Math.max(1,rlv[11]||1),r=64;return{x:CX+Math.cos(a)*r,y:CY+Math.sin(a)*r,tid:0,hp:Math.floor(TT[0].mhp*twH),cd:i*90};});
+  return{tears:(rlv[10]||0)*15,wave:0,tgt,zombies:[],towers:starter,parts:[],projs:[],drops:[],mx:-300,my:-300,
     cR:36+(rlv[0]||0)*4+(et.cur_range||0),cD:1+(rlv[1]||0)*0.5+(et.cur_dmg_f||0),cDp:1+(rlv[1]||0)*0.03+(et.cur_dmg_p||0)/100,
     kills:0,sQs:[],sel:null,placing:false,lt:0,coreHp:coreBase,coreMax:coreBase,coreReg:(et.core_reg||0),coreShield:Math.min(80,et.core_shield||0),
     go:false,vic:false,wPause:0,wActive:false,rlv,eq:equipped,et,
     twD:1+(rlv[3]||0)*8/100+(et.tw_dmg_p||0)/100+(et.all_dmg_p||0)/100,twS:1+(rlv[6]||0)*6/100+(et.tw_spd_p||0)/100,
-    twH:1+(rlv[5]||0)*10/100+(et.tw_hp_p||0)/100,tearP:1+(rlv[2]||0)*10/100+(et.tear_p||0)/100,
+    twH,tearP:1+(rlv[2]||0)*10/100+(et.tear_p||0)/100,
     costP:1-Math.min(0.48,(rlv[7]||0)*0.04),dropUp:(et.drop_up||0)/100,markTower:(et.mark_tower||0)/100,
     waveWipe:(et.wave_wipe||0)/100,critCh:(et.crit||0)/100,chainKill:(et.chain_kill||0)/100,killBuff:(et.kill_buff||0)/100,
     auraDmg:(et.aura_dmg||0)/100,auraSpd:(et.aura_spd||0)/100,twSplash:(et.tw_splash||0)/100,twChain:(et.tw_chain||0)/100,
     twHeal:(et.tw_heal||0)/100,twGold:(et.tw_gold||0)/100,luck:(rlv[9]||0),maxTowers:Math.min(200,MAX_TOWERS+(et.tw_max||0)),
     twSlow:(et.tw_slow||0)/100,curClone:(et.cur_clone||0)/100,clones:[],
     kbFury:(et.kb_fury||0)/100,kbHaste:(et.kb_haste||0)/100,kbRain:(et.kb_rain||0)/100,kbShield:(et.kb_shield||0)/100,
+    specialD:1+(rlv[12]||0)*0.04,miracle:rlv[13]||0,bossTearP:1+(rlv[14]||0)*0.2,graveSave:rlv[15]||0,waveBuff:(rlv[16]||0)*0.03,
     runDrops:[],newDrops:[],grave:grave||null,buffs:[],_wipeTriggered:false,_chainPending:0,dmgNums:[],
   };
 };
@@ -233,17 +242,17 @@ export default function Game(){
   const startRun=()=>{gs.current=mkRun(target,rlv,equipped,grave);setPhase("run");setRunTab(0);};
   const endRun=useCallback(vic=>{const s=gs.current;const mul=vic?2:1;const et=Math.floor(s.tears*mul);
     if(vic){setRunResult({vic,et,kept:s.runDrops,lost:[],w:s.wave,tgt:s.tgt,k:s.kills,lostEq:[]});setTears(t=>t+et);setStash(p=>[...p,...s.runDrops]);setGrave(null);}
-    else{const lc=Math.min(equipped.length,1+Math.floor(Math.random()*3));const sh=[...equipped].sort(()=>Math.random()-0.5);const lostEq=sh.slice(0,lc);const lu=new Set(lostEq.map(e=>e.uid));setRunResult({vic,et,kept:[],lost:s.runDrops,w:s.wave,tgt:s.tgt,k:s.kills,lostEq});setTears(t=>t+et);setStash(p=>p.filter(e=>!lu.has(e.uid)));setEquipped(p=>p.filter(e=>!lu.has(e.uid)));if(lostEq.length>0)setGrave({wave:s.wave,items:lostEq});}
+    else{const lc=Math.min(equipped.length,Math.max(0,1+Math.floor(Math.random()*3)-(s.graveSave||0)));const sh=[...equipped].sort(()=>Math.random()-0.5);const lostEq=sh.slice(0,lc);const lu=new Set(lostEq.map(e=>e.uid));setRunResult({vic,et,kept:[],lost:s.runDrops,w:s.wave,tgt:s.tgt,k:s.kills,lostEq});setTears(t=>t+et);setStash(p=>p.filter(e=>!lu.has(e.uid)));setEquipped(p=>p.filter(e=>!lu.has(e.uid)));if(lostEq.length>0)setGrave({wave:s.wave,items:lostEq});}
     setPhase("result");},[equipped]);
 
   const spawn1=useCallback((wn,rem)=>{const s=gs.current;const side=Math.random()*4|0;let x,y;if(side===0){x=Math.random()*W;y=-18}else if(side===1){x=W+18;y=Math.random()*H}else if(side===2){x=Math.random()*W;y=H+18}else{x=-18;y=Math.random()*H}const hp=wHp(wn);const boss=wn%10===0&&rem===1;const bm=boss?5:1;const hpVar=boss?1:0.8+Math.random()*0.5;const type=boss?"basic":rollType(wn);const et=ETYPES[type];const fHp=hp*bm*hpVar*et.hpMul;s.zombies.push({x,y,type,hp:fHp,mhp:fHp,spd:(wSpd(wn)+(Math.random()-0.5)*8)*et.spdMul,val:Math.floor((2+wn*0.7)*s.tearP*bm*hpVar*et.drop),sz:boss?22:et.szBase+Math.random()*2+(hpVar-1)*4,boss,atk:null,atkT:0,dropR:boss?1:Math.min(0.35,0.04+wn*0.002)+s.dropUp,markT:0,armor:et.armor});},[]);
-  const startW=useCallback(wn=>{const s=gs.current;s.wave=wn;s.sQs.push({w:wn,rem:wZ(wn),t:0.3,iv:Math.max(0.12,10/wZ(wn))});s.wActive=true;if(s.grave&&wn>=s.grave.wave){s.runDrops.push(...s.grave.items);s.newDrops.push({special:"🔄 ロスト装備を回収!",t:3,x:CX,y:CY-60});s.grave=null;}},[]);
+  const startW=useCallback(wn=>{const s=gs.current;s.wave=wn;s.sQs.push({w:wn,rem:wZ(wn),t:0.3,iv:Math.max(0.12,10/wZ(wn))});s.wActive=true;if(s.waveBuff>0&&Math.random()<s.waveBuff){const bt=BUFF_TYPES[Math.floor(Math.random()*BUFF_TYPES.length)];const ex=s.buffs.find(b=>b.id===bt.id);if(ex)ex.rem=bt.dur;else s.buffs.push({...bt,rem:bt.dur});s.newDrops.push({special:`🌩 ${bt.name}!`,t:1.8,x:CX,y:CY-65});}if(s.grave&&wn>=s.grave.wave){s.runDrops.push(...s.grave.items);s.newDrops.push({special:"🔄 ロスト装備を回収!",t:3,x:CX,y:CY-60});s.grave=null;}},[]);
   const rushW=useCallback(()=>{const s=gs.current;if(!s||s.go||s.vic||s.wave>=s.tgt)return;const nxt=s.wave+1;s.wave=nxt;s.sQs.push({w:nxt,rem:wZ(nxt),t:0,iv:Math.max(0.12,10/wZ(nxt))});s.wActive=true;if(s.grave&&nxt>=s.grave.wave){s.runDrops.push(...s.grave.items);s.newDrops.push({special:"🔄 ロスト装備を回収!",t:3,x:CX,y:CY-60});s.grave=null;}sync();},[]);
   const rushAllW=useCallback(()=>{const s=gs.current;if(!s||s.go||s.vic||s.wave>=s.tgt)return;for(let w=s.wave+1;w<=s.tgt;w++){s.sQs.push({w,rem:wZ(w),t:0,iv:Math.max(0.12,10/wZ(w))});}s.wave=s.tgt;s.wActive=true;if(s.grave){s.runDrops.push(...s.grave.items);s.newDrops.push({special:"🔄 ロスト装備を回収!",t:3,x:CX,y:CY-60});s.grave=null;}sync();},[]);
 
   // Kill flags processed AFTER zombie loop
   const onKill=useCallback((s,z)=>{
-    s.tears+=z.val;s.kills++;
+    const val=Math.floor(z.val*(z.boss?s.bossTearP:1));s.tears+=val;s.kills++;
     if(Math.random()<z.dropR){const drop=doDrop(s.wave,z.boss,s.luck);s.runDrops.push(drop);const st0=drop.stats[0];const sd0=sf(st0.k);if(s.newDrops.length<20)s.newDrops.push({special:null,rar:drop.rar,label:`${rarTag(drop)}[${rarName(drop)}] ${sd0.l} ${sd0.f(st0.v)}`,t:2.5,x:z.x,y:z.y});}
     // Flag wave wipe / chain kill for deferred processing
     if(s.waveWipe>0&&!s._wipeTriggered&&Math.random()<s.waveWipe&&s.zombies.length>1){s._wipeTriggered=true;}
@@ -276,10 +285,10 @@ export default function Game(){
       for(let i=s.drops.length-1;i>=0;i--){s.drops[i].y+=s.drops[i].vy*dt;s.drops[i].life-=dt;if(s.drops[i].life<=0)s.drops.splice(i,1);}
       const dmgMap=new Map();for(const t of s.towers){const tp=TT[t.tid];if(tp.eff==="dmgUp"&&t.hp>0){for(const o of s.towers){if(o!==t&&TT[o.tid].cat===0&&o.hp>0&&Math.hypot(o.x-t.x,o.y-t.y)<tp.range)dmgMap.set(o,(dmgMap.get(o)||1)*1.5);}}}
       for(const t of s.towers){const tp=TT[t.tid];if(tp.eff==="heal"&&t.hp>0){t.cd-=dt*1000*s.twS*bH;if(t.cd<=0){t.cd=tp.cd;for(const o of s.towers){if(o!==t&&o.hp>0){const omhp=Math.floor(TT[o.tid].mhp*s.twH);if(o.hp<omhp&&Math.hypot(o.x-t.x,o.y-t.y)<tp.range){o.hp=Math.min(omhp,o.hp+10);s.parts.push({x:o.x,y:o.y-8,vx:(Math.random()-0.5)*20,vy:-20,life:0.4,col:"#4ade80",sz:2});}}}}}}
-      for(const t of s.towers){const tp=TT[t.tid];if(tp.cat!==0||t.hp<=0)continue;const inC=(s.mx>0&&Math.hypot(t.x-s.mx,t.y-s.my)<ecR);const aD=inC?1+s.auraDmg:1;const aS=inC?1+s.auraSpd:1;t.cd-=dt*1000*s.twS*bH*aS;if(t.cd<=0){let best=null,bd=tp.range;for(const z of s.zombies){const d=Math.hypot(z.x-t.x,z.y-t.y);if(d<bd){best=z;bd=d;}}if(best){const ml=(dmgMap.get(t)||1)*s.twD*aD;const hd=tp.dmg*ml*(best.armor||1);best.hp-=hd;t.cd=tp.cd;s.projs.push({x:t.x,y:t.y,tx:best.x,ty:best.y,p:0,col:inC?"#fcd34d":tp.col});
+      for(const t of s.towers){const tp=TT[t.tid];if(tp.cat!==0||t.hp<=0)continue;const inC=(s.mx>0&&Math.hypot(t.x-s.mx,t.y-s.my)<ecR);const aD=inC?1+s.auraDmg:1;const aS=inC?1+s.auraSpd:1;t.cd-=dt*1000*s.twS*bH*aS;if(t.cd<=0){let best=null,bd=tp.range;for(const z of s.zombies){const d=Math.hypot(z.x-t.x,z.y-t.y);if(d<bd){best=z;bd=d;}}if(best){const spD=best.type!=="basic"||best.boss?s.specialD:1;const ml=(dmgMap.get(t)||1)*s.twD*aD;const hd=tp.dmg*ml*(best.armor||1)*spD;best.hp-=hd;t.cd=tp.cd;s.projs.push({x:t.x,y:t.y,tx:best.x,ty:best.y,p:0,col:inC?"#fcd34d":tp.col});
           if(s.dmgNums.length<30&&hd>1)s.dmgNums.push({x:best.x+(Math.random()-0.5)*12,y:best.y-(best.sz||10)-4,v:Math.floor(hd),col:inC?"#fcd34d":"#4ade80",t:0.7,big:false});
-        if(s.twSplash>0&&Math.random()<s.twSplash){for(const z2 of s.zombies){if(z2!==best&&Math.hypot(z2.x-best.x,z2.y-best.y)<50)z2.hp-=hd*0.5*(z2.armor||1);}for(let p=0;p<6;p++)s.parts.push({x:best.x,y:best.y,vx:(Math.random()-0.5)*80,vy:(Math.random()-0.5)*80,life:0.3,col:"#fb923c",sz:2.5});}
-        if(s.twChain>0&&Math.random()<s.twChain){let pv=best;for(let c=0;c<2;c++){let cn=null,cd3=120;for(const z2 of s.zombies){if(z2!==pv&&z2.hp>0){const d=Math.hypot(z2.x-pv.x,z2.y-pv.y);if(d<cd3){cn=z2;cd3=d;}}}if(cn){cn.hp-=hd*0.4*(cn.armor||1);s.projs.push({x:pv.x,y:pv.y,tx:cn.x,ty:cn.y,p:0,col:"#38bdf8"});pv=cn;}}}
+        if(s.twSplash>0&&Math.random()<s.twSplash){for(const z2 of s.zombies){if(z2!==best&&Math.hypot(z2.x-best.x,z2.y-best.y)<50)z2.hp-=hd*0.5*(z2.armor||1)*(z2.type!=="basic"||z2.boss?s.specialD:1);}for(let p=0;p<6;p++)s.parts.push({x:best.x,y:best.y,vx:(Math.random()-0.5)*80,vy:(Math.random()-0.5)*80,life:0.3,col:"#fb923c",sz:2.5});}
+        if(s.twChain>0&&Math.random()<s.twChain){let pv=best;for(let c=0;c<2;c++){let cn=null,cd3=120;for(const z2 of s.zombies){if(z2!==pv&&z2.hp>0){const d=Math.hypot(z2.x-pv.x,z2.y-pv.y);if(d<cd3){cn=z2;cd3=d;}}}if(cn){cn.hp-=hd*0.4*(cn.armor||1)*(cn.type!=="basic"||cn.boss?s.specialD:1);s.projs.push({x:pv.x,y:pv.y,tx:cn.x,ty:cn.y,p:0,col:"#38bdf8"});pv=cn;}}}
         if(s.twHeal>0&&Math.random()<s.twHeal){s.coreHp=Math.min(s.coreMax,s.coreHp+3+s.wave*0.1);s.parts.push({x:CX,y:CY,vx:0,vy:-12,life:0.5,col:"#86efac",sz:3});}
         if(s.twGold>0&&Math.random()<s.twGold){const b=Math.floor(1+s.wave*0.3);s.tears+=b;s.newDrops.push({special:`💧+${b}`,t:1,x:best.x,y:best.y-10});}
         if(s.twSlow>0&&Math.random()<s.twSlow){best.slowT=Math.max(best.slowT||0,1.5);}}}}
@@ -288,15 +297,15 @@ export default function Game(){
         if(z.slowT){z.slowT-=dt;if(z.slowT<=0)z.slowT=0;}
         const slowMul=z.slowT>0?0.5:1;
         if(!z.atk){const dx=CX-z.x,dy=CY-z.y,dist=Math.hypot(dx,dy);if(dist>18){z.x+=(dx/dist)*z.spd*dt*slowMul;z.y+=(dy/dist)*z.spd*dt*slowMul;}else{
-          let coreDmg=0;if(!bS){coreDmg=Math.max(3,z.hp*0.35)*(1-s.coreShield/100);s.coreHp-=coreDmg;}
+          let coreDmg=0;if(!bS){coreDmg=Math.max(3,z.hp*0.35)*(1-s.coreShield/100);s.coreHp-=coreDmg;if(s.coreHp<=0&&s.miracle>0){s.miracle--;s.coreHp=Math.max(1,s.coreMax*0.3);s.buffs.push({...BUFF_TYPES[3],rem:BUFF_TYPES[3].dur});s.newDrops.push({special:"🛡 奇跡の結界!",t:2.5,x:CX,y:CY-55});}}
           if(s.dmgNums.length<30)s.dmgNums.push({x:CX,y:CY-20,v:bS?"SHIELD":"-"+Math.floor(coreDmg),col:bS?"#fbbf24":"#ef4444",t:1.2,big:true});
           for(let p=0;p<6;p++)s.parts.push({x:CX,y:CY,vx:(Math.random()-0.5)*60,vy:(Math.random()-0.5)*60,life:0.5,col:bS?"#fbbf24":"#ef4444",sz:3});s.zombies.splice(i,1);if(s.coreHp<=0){s.coreHp=0;s.go=true;endRun(false);}continue;}
-          for(const t of s.towers){if(t.hp<=0)continue;const tp=TT[t.tid];if(tp.eff!=="wall"&&tp.eff!=="barricade")continue;if(Math.hypot(z.x-t.x,z.y-t.y)<tp.range+z.sz){z.atk=t;z.atkT=0.3;if(tp.eff==="barricade")z.hp-=tp.dmg*s.twD*(z.armor||1);break;}}}
-        const cd2=Math.hypot(z.x-s.mx,z.y-s.my);if(cd2<ecR){let dmg=ecD*dt*25;let isCrit=false;if(s.critCh>0&&Math.random()<s.critCh*dt*5){dmg*=5;isCrit=true;s.parts.push({x:z.x,y:z.y-z.sz-10,vx:0,vy:-20,life:0.5,col:"#ef4444",sz:3});}z.hp-=dmg;
+          for(const t of s.towers){if(t.hp<=0)continue;const tp=TT[t.tid];if(tp.eff!=="wall"&&tp.eff!=="barricade")continue;if(Math.hypot(z.x-t.x,z.y-t.y)<tp.range+z.sz){z.atk=t;z.atkT=0.3;if(tp.eff==="barricade")z.hp-=tp.dmg*s.twD*(z.armor||1)*(z.type!=="basic"||z.boss?s.specialD:1);break;}}}
+        const cd2=Math.hypot(z.x-s.mx,z.y-s.my);if(cd2<ecR){let dmg=ecD*dt*25*(z.type!=="basic"||z.boss?s.specialD:1);let isCrit=false;if(s.critCh>0&&Math.random()<s.critCh*dt*5){dmg*=5;isCrit=true;s.parts.push({x:z.x,y:z.y-z.sz-10,vx:0,vy:-20,life:0.5,col:"#ef4444",sz:3});}z.hp-=dmg;
           z._accDmg=(z._accDmg||0)+dmg;z._accT=(z._accT||0)+dt;
           if(z._accT>=0.3||isCrit){if(s.dmgNums.length<30)s.dmgNums.push({x:z.x+(Math.random()-0.5)*10,y:z.y-z.sz-5,v:Math.floor(z._accDmg)+(isCrit?" CRIT!":""),col:isCrit?"#ef4444":"#93c5fd",t:0.8,big:isCrit});z._accDmg=0;z._accT=0;}
           z.markT+=dt;if(z.markT>=0.2&&s.markTower>0&&s.towers.length<s.maxTowers){z.markT=0;if(Math.random()<s.markTower){const tid=Math.floor(Math.random()*4);s.towers.push({x:z.x+(Math.random()-0.5)*40,y:z.y+(Math.random()-0.5)*40,tid,hp:Math.floor(TT[tid].mhp*s.twH),cd:0});s.newDrops.push({special:"🏗 召喚!",t:1.2,x:z.x,y:z.y-25});}}}else{z.markT=Math.max(0,z.markT-dt*2);}
-        for(const c of s.clones){const cdC=Math.hypot(z.x-c.x,z.y-c.y);if(cdC<ecR)z.hp-=ecD*dt*25*0.6;}
+        for(const c of s.clones){const cdC=Math.hypot(z.x-c.x,z.y-c.y);if(cdC<ecR)z.hp-=ecD*dt*25*0.6*(z.type!=="basic"||z.boss?s.specialD:1);}
         if(z.type==="healer"){z._healT=(z._healT||0)+dt;if(z._healT>=1.2){z._healT=0;for(const o of s.zombies){if(o!==z&&o.hp<o.mhp&&Math.hypot(o.x-z.x,o.y-z.y)<65){o.hp=Math.min(o.mhp,o.hp+o.mhp*0.06);if(s.parts.length<300)s.parts.push({x:o.x,y:o.y-5,vx:(Math.random()-0.5)*20,vy:-22,life:0.45,col:"#f0abfc",sz:2});}}}}
         let slowed=false;for(const t of s.towers){if(TT[t.tid].eff==="wall"&&t.hp>0&&Math.hypot(z.x-t.x,z.y-t.y)<55){slowed=true;break;}}
         if(slowed&&!z.atk){const d2=Math.hypot(CX-z.x,CY-z.y);if(d2>1){z.x-=((CX-z.x)/d2)*z.spd*dt*0.35;z.y-=((CY-z.y)/d2)*z.spd*dt*0.35;}}
@@ -309,7 +318,7 @@ export default function Game(){
       }else{s._wipeTriggered=false;}
       // Deferred chain kills (max 5 per frame)
       const chains=Math.min(s._chainPending||0,5);s._chainPending=0;
-      for(let c=0;c<chains&&s.zombies.length>0;c++){const ci=Math.floor(Math.random()*s.zombies.length);const cz=s.zombies[ci];s.tears+=cz.val;s.kills++;if(s.parts.length<300)s.parts.push({x:cz.x,y:cz.y,vx:0,vy:-15,life:0.5,col:"#f43f5e",sz:4});if(s.newDrops.length<20)s.newDrops.push({special:"⛓ 連鎖!",t:1.5,x:cz.x,y:cz.y-15});s.zombies.splice(ci,1);}
+      for(let c=0;c<chains&&s.zombies.length>0;c++){const ci=Math.floor(Math.random()*s.zombies.length);const cz=s.zombies[ci];s.tears+=Math.floor(cz.val*(cz.boss?s.bossTearP:1));s.kills++;if(s.parts.length<300)s.parts.push({x:cz.x,y:cz.y,vx:0,vy:-15,life:0.5,col:"#f43f5e",sz:4});if(s.newDrops.length<20)s.newDrops.push({special:"⛓ 連鎖!",t:1.5,x:cz.x,y:cz.y-15});s.zombies.splice(ci,1);}
       if(s.parts.length>400)s.parts.splice(0,s.parts.length-400);
       if(s.newDrops.length>25)s.newDrops.splice(0,s.newDrops.length-25);
       if(s.drops.length>60)s.drops.splice(0,s.drops.length-60);
@@ -386,7 +395,7 @@ export default function Game(){
         <div style={{textAlign:"center",marginTop:10}}><GlowBtn on={startRun} color="#2563eb" style={{padding:"10px 48px",fontSize:15,letterSpacing:3}}>ランを開始</GlowBtn></div>
       </div>
       <div style={{display:"flex",background:"#090e09"}}>
-        {["装備","合成","レリック"].map((t,i)=>(<button key={i} onClick={()=>{setHubTab(i);if(i!==1){setSynA(null);setSynB(null);}}} style={{flex:1,padding:"8px 0",background:"transparent",color:hubTab===i?["#f9a8d4","#fbbf24","#a5b4fc"][i]:"#3a5a3a",border:"none",borderBottom:hubTab===i?`2px solid ${["#f472b6","#fbbf24","#818cf8"][i]}`:"2px solid transparent",fontSize:12,cursor:"pointer",fontWeight:hubTab===i?700:400,letterSpacing:1,transition:"all .2s"}}>{t}{i===0?` (${stash.length})`:""}</button>))}
+        {["装備","合成","アップグレード"].map((t,i)=>(<button key={i} onClick={()=>{setHubTab(i);if(i!==1){setSynA(null);setSynB(null);}}} style={{flex:1,padding:"8px 0",background:"transparent",color:hubTab===i?["#f9a8d4","#fbbf24","#a5b4fc"][i]:"#3a5a3a",border:"none",borderBottom:hubTab===i?`2px solid ${["#f472b6","#fbbf24","#818cf8"][i]}`:"2px solid transparent",fontSize:12,cursor:"pointer",fontWeight:hubTab===i?700:400,letterSpacing:1,transition:"all .2s"}}>{t}{i===0?` (${stash.length})`:""}</button>))}
       </div>
       <div style={{background:"#090e09",minHeight:90,maxHeight:230,overflowY:"auto",padding:"10px 14px"}}>
         {hubTab===0&&(<div>

@@ -28,7 +28,7 @@ const SD={
   core_shield:{l:"種ダメ減%",f:v=>"+"+Math.round(v)+"%",c:"#a78bfa",d:"種が受けるダメージを%で軽減"},
   drop_up:{l:"ドロップ率%",f:v=>"+"+v.toFixed(1)+"%",c:"#fb923c",d:"敵を倒した時の装備ドロップ率が上昇"},
   mark_tower:{l:"マーク召喚%",f:v=>v.toFixed(0)+"%",c:"#e879f9",d:"カーソルで0.2秒照射した敵の近くにタワーを自動配置"},
-  wave_wipe:{l:"天罰確率%",f:v=>v.toFixed(1)+"%",c:"#facc15",d:"敵を倒す度にこの確率で全敵に最大HPの50%ダメージ"},
+  wave_wipe:{l:"天罰確率%",f:v=>v.toFixed(1)+"%",c:"#facc15",d:"敵を倒す度にこの確率で全敵に最大HPの20%ダメージ"},
   crit:{l:"会心率%",f:v=>v.toFixed(1)+"%",c:"#ef4444",d:"カーソル攻撃が5倍ダメージになる確率"},
   chain_kill:{l:"連鎖処刑%",f:v=>v.toFixed(1)+"%",c:"#f43f5e",d:"敵を倒した時に別のランダムな敵も即死する確率"},
   kill_buff:{l:"キルバフ%",f:v=>v.toFixed(1)+"%",c:"#22d3ee",d:"敵を倒した時にランダムな一時バフを得る確率"},
@@ -296,7 +296,7 @@ export default function Game(){
       // Deferred wave wipe (flagged in onKill, processed safely after loop)
       if(s._wipeTriggered&&s.zombies.length>0){
         s._wipeTriggered=false;
-        for(let i=s.zombies.length-1;i>=0;i--){const wz=s.zombies[i];wz.hp-=wz.mhp*0.5;if(s.parts.length<300)for(let p=0;p<2;p++)s.parts.push({x:wz.x,y:wz.y,vx:(Math.random()-0.5)*80,vy:(Math.random()-0.5)*80,life:0.4,col:"#facc15",sz:3});if(wz.hp<=0){onKill(s,wz);s.zombies.splice(i,1);}}
+        for(let i=s.zombies.length-1;i>=0;i--){const wz=s.zombies[i];wz.hp-=wz.mhp*0.2;if(s.parts.length<300)for(let p=0;p<2;p++)s.parts.push({x:wz.x,y:wz.y,vx:(Math.random()-0.5)*80,vy:(Math.random()-0.5)*80,life:0.4,col:"#facc15",sz:3});if(wz.hp<=0){onKill(s,wz);s.zombies.splice(i,1);}}
         if(s.newDrops.length<20)s.newDrops.push({special:"⚡ 天罰発動!",t:2.5,x:CX,y:CY-40});
       }else{s._wipeTriggered=false;}
       // Deferred chain kills (max 5 per frame)

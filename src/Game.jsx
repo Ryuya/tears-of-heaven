@@ -113,7 +113,7 @@ const TYPE_COL={
 };
 const rollType=(wn)=>{const r=Math.random();const tH=wn>=12?0.17:0;const tA=tH+(wn>=7?0.18:0);const tS=tA+(wn>=4?0.20:0);if(r<tH)return"healer";if(r<tA)return"armor";if(r<tS)return"swift";return"basic";};
 
-const ASSET_PATHS={atlas:"/assets/tears-atlas.png",bg:"/assets/battlefield.png"};
+const ASSET_PATHS={atlas:"/assets/tears-atlas.png",bg:"/assets/battlefield.png",walk:"/assets/enemy-walk.png"};
 const SPR={
   enemies:{
     basic:[35,35,205,230],swift:[285,45,185,225],armor:[510,28,245,235],healer:[770,45,160,225],boss:[920,80,310,405],
@@ -133,6 +133,12 @@ const drawSprite=(ctx,img,r,x,y,w,h,alpha=1,rot=0)=>{
   ctx.save();ctx.globalAlpha*=alpha;ctx.translate(x,y);if(rot)ctx.rotate(rot);
   ctx.drawImage(img,r[0],r[1],r[2],r[3],-w/2,-h/2,w,h);
   ctx.restore();return true;
+};
+const WALK={cell:160,frames:8,rows:{basic:0,swift:1,armor:2}};
+const drawWalk=(ctx,img,type,x,y,w,h,now,phase=0)=>{
+  const row=WALK.rows[type];if(row===undefined||!okImg(img))return false;
+  const f=(Math.floor(now/90+phase)%WALK.frames+WALK.frames)%WALK.frames;
+  return drawSprite(ctx,img,[f*WALK.cell,row*WALK.cell,WALK.cell,WALK.cell],x,y,w,h);
 };
 
 const mkRun=(tgt,rlv,equipped,grave)=>{
@@ -316,7 +322,7 @@ export default function Game(){
   },[phase,startW,spawn1,endRun,onKill]);
 
   const render=(ctx,s,ecR)=>{
-    const cr=ecR||s.cR,atlas=assets.current.atlas,bg=assets.current.bg,now=performance.now();
+    const cr=ecR||s.cR,atlas=assets.current.atlas,bg=assets.current.bg,walk=assets.current.walk,now=performance.now();
     if(okImg(bg)){ctx.drawImage(bg,0,0,W,H);ctx.fillStyle="rgba(2,8,7,0.28)";ctx.fillRect(0,0,W,H);}
     else{ctx.fillStyle="#070b07";ctx.fillRect(0,0,W,H);ctx.globalAlpha=0.03;for(let i=0;i<80;i++){ctx.fillStyle=i%3===0?"#1a3a1a":"#0d1f0d";ctx.fillRect((i*137.5)%W,(i*89.3)%H,12+(i%20),1.5);}ctx.globalAlpha=1;}
     const vign=ctx.createRadialGradient(CX,CY,40,CX,CY,Math.max(W,H)*0.65);vign.addColorStop(0,"rgba(80,160,130,0.08)");vign.addColorStop(1,"rgba(0,0,0,0.58)");ctx.fillStyle=vign;ctx.fillRect(0,0,W,H);
@@ -337,7 +343,7 @@ export default function Game(){
 
     for(const pr of s.projs){const px=pr.x+(pr.tx-pr.x)*pr.p,py=pr.y+(pr.ty-pr.y)*pr.p;ctx.globalAlpha=1-pr.p*0.45;if(!drawSprite(ctx,atlas,SPR.droplet,px,py,10,15,ctx.globalAlpha,Math.atan2(pr.ty-pr.y,pr.tx-pr.x)+Math.PI/2)){ctx.fillStyle=pr.col;ctx.beginPath();ctx.arc(px,py,3,0,Math.PI*2);ctx.fill();}}ctx.globalAlpha=1;
 
-    for(const z of s.zombies){const hr=z.hp/z.mhp;const tc=TYPE_COL[z.type]||TYPE_COL.basic;const dmg=1-hr;if(z.type==="healer"){ctx.strokeStyle="rgba(240,171,252,0.18)";ctx.lineWidth=1;ctx.beginPath();ctx.arc(z.x,z.y,65,0,Math.PI*2);ctx.stroke();}ctx.fillStyle="rgba(0,0,0,0.24)";ctx.beginPath();ctx.ellipse(z.x,z.y+z.sz*0.7,z.sz*1.15,z.sz*0.35,0,0,Math.PI*2);ctx.fill();const sr=z.boss?SPR.enemies.boss:SPR.enemies[z.type];const ew=z.sz*(z.boss?3.0:3.35),eh=z.sz*(z.boss?3.5:3.75);if(!drawSprite(ctx,atlas,sr,z.x,z.y,ew,eh,1)){ctx.fillStyle=`rgb(${tc.r+dmg*tc.dr|0},${tc.g+dmg*tc.dg|0},${tc.b+dmg*tc.db|0})`;ctx.beginPath();ctx.arc(z.x,z.y,z.sz,0,Math.PI*2);ctx.fill();ctx.fillStyle="#ef4444";ctx.beginPath();ctx.arc(z.x-z.sz*0.28,z.y-z.sz*0.15,z.sz*0.15,0,Math.PI*2);ctx.arc(z.x+z.sz*0.28,z.y-z.sz*0.15,z.sz*0.15,0,Math.PI*2);ctx.fill();}if(z.type==="armor"){ctx.strokeStyle="rgba(210,220,240,0.8)";ctx.lineWidth=2;ctx.beginPath();ctx.arc(z.x,z.y,z.sz+3,0,Math.PI*2);ctx.stroke();}if(z.boss){ctx.strokeStyle="#facc15";ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(z.x,z.y,z.sz+5,0,Math.PI*2);ctx.stroke();}if(z.markT>0.08){ctx.strokeStyle="rgba(232,121,249,0.55)";ctx.lineWidth=2;ctx.beginPath();ctx.arc(z.x,z.y,z.sz+8,0,Math.PI*2*(z.markT/0.2));ctx.stroke();}if(hr<1){const bw=z.sz*2.4;ctx.fillStyle="#111";ctx.fillRect(z.x-bw/2,z.y-z.sz-13,bw,3);ctx.fillStyle=hr>0.5?"#4ade80":hr>0.25?"#fbbf24":"#ef4444";ctx.fillRect(z.x-bw/2,z.y-z.sz-13,bw*hr,3);}}
+    for(const z of s.zombies){const hr=z.hp/z.mhp;const tc=TYPE_COL[z.type]||TYPE_COL.basic;const dmg=1-hr;if(z.type==="healer"){ctx.strokeStyle="rgba(240,171,252,0.18)";ctx.lineWidth=1;ctx.beginPath();ctx.arc(z.x,z.y,65,0,Math.PI*2);ctx.stroke();}ctx.fillStyle="rgba(0,0,0,0.24)";ctx.beginPath();ctx.ellipse(z.x,z.y+z.sz*0.7,z.sz*1.15,z.sz*0.35,0,0,Math.PI*2);ctx.fill();const sr=z.boss?SPR.enemies.boss:SPR.enemies[z.type];const ew=z.sz*(z.boss?3.0:3.35),eh=z.sz*(z.boss?3.5:3.75);const ph=((z.x*0.07+z.y*0.11)|0);if(!(drawWalk(ctx,walk,z.type,z.x,z.y,ew,eh,now,ph)||drawSprite(ctx,atlas,sr,z.x,z.y,ew,eh,1))){ctx.fillStyle=`rgb(${tc.r+dmg*tc.dr|0},${tc.g+dmg*tc.dg|0},${tc.b+dmg*tc.db|0})`;ctx.beginPath();ctx.arc(z.x,z.y,z.sz,0,Math.PI*2);ctx.fill();ctx.fillStyle="#ef4444";ctx.beginPath();ctx.arc(z.x-z.sz*0.28,z.y-z.sz*0.15,z.sz*0.15,0,Math.PI*2);ctx.arc(z.x+z.sz*0.28,z.y-z.sz*0.15,z.sz*0.15,0,Math.PI*2);ctx.fill();}if(z.type==="armor"){ctx.strokeStyle="rgba(210,220,240,0.8)";ctx.lineWidth=2;ctx.beginPath();ctx.arc(z.x,z.y,z.sz+3,0,Math.PI*2);ctx.stroke();}if(z.boss){ctx.strokeStyle="#facc15";ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(z.x,z.y,z.sz+5,0,Math.PI*2);ctx.stroke();}if(z.markT>0.08){ctx.strokeStyle="rgba(232,121,249,0.55)";ctx.lineWidth=2;ctx.beginPath();ctx.arc(z.x,z.y,z.sz+8,0,Math.PI*2*(z.markT/0.2));ctx.stroke();}if(hr<1){const bw=z.sz*2.4;ctx.fillStyle="#111";ctx.fillRect(z.x-bw/2,z.y-z.sz-13,bw,3);ctx.fillStyle=hr>0.5?"#4ade80":hr>0.25?"#fbbf24":"#ef4444";ctx.fillRect(z.x-bw/2,z.y-z.sz-13,bw*hr,3);}}
 
     for(const p of s.parts){ctx.globalAlpha=Math.max(0,p.life/0.7);if((p.col==="#facc15"||p.col==="#fb923c")&&drawSprite(ctx,atlas,SPR.lightning,p.x,p.y,p.sz*9,p.sz*9,ctx.globalAlpha)){}else if(p.col==="#f0abfc"&&drawSprite(ctx,atlas,SPR.heal,p.x,p.y,p.sz*12,p.sz*10,ctx.globalAlpha)){}else{ctx.fillStyle=p.col;ctx.beginPath();ctx.arc(p.x,p.y,p.sz,0,Math.PI*2);ctx.fill();}}ctx.globalAlpha=1;
     for(const d of s.newDrops){ctx.globalAlpha=Math.min(1,d.t/0.5);ctx.font=`bold ${(d.rar||0)>=3?12:11}px sans-serif`;ctx.textAlign="center";ctx.fillStyle=d.special?"#facc15":RARS[d.rar||0].col;ctx.fillText(d.special||d.label||"",d.x,d.y-20);}ctx.globalAlpha=1;

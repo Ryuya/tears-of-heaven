@@ -134,10 +134,10 @@ const drawSprite=(ctx,img,r,x,y,w,h,alpha=1,rot=0)=>{
   ctx.drawImage(img,r[0],r[1],r[2],r[3],-w/2,-h/2,w,h);
   ctx.restore();return true;
 };
-const WALK={cell:160,frames:16,rows:{basic:0,swift:1,armor:2}};
+const WALK={cell:180,frames:24,rows:{basic:0,swift:1,armor:2}};
 const drawWalk=(ctx,img,type,x,y,w,h,now,phase=0)=>{
   const row=WALK.rows[type];if(row===undefined||!okImg(img))return false;
-  const f=(Math.floor(now/55+phase)%WALK.frames+WALK.frames)%WALK.frames;
+  const f=(Math.floor(now/44+phase)%WALK.frames+WALK.frames)%WALK.frames;
   return drawSprite(ctx,img,[f*WALK.cell,row*WALK.cell,WALK.cell,WALK.cell],x,y,w,h);
 };
 

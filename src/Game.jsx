@@ -135,6 +135,7 @@ const SPR={
   cloneRing:[215,930,285,285],
 };
 const okImg=img=>img&&img.complete&&img.naturalWidth>0;
+const twBodyR=tp=>tp.eff==="wall"||tp.eff==="barricade"?tp.range:tp.cat===0?16:14;
 const drawSprite=(ctx,img,r,x,y,w,h,alpha=1,rot=0)=>{
   if(!okImg(img)||!r)return false;
   ctx.save();ctx.globalAlpha*=alpha;ctx.translate(x,y);if(rot)ctx.rotate(rot);
@@ -300,7 +301,7 @@ export default function Game(){
           let coreDmg=0;if(!bS){coreDmg=Math.max(3,z.hp*0.35)*(1-s.coreShield/100);s.coreHp-=coreDmg;if(s.coreHp<=0&&s.miracle>0){s.miracle--;s.coreHp=Math.max(1,s.coreMax*0.3);s.buffs.push({...BUFF_TYPES[3],rem:BUFF_TYPES[3].dur});s.newDrops.push({special:"🛡 奇跡の結界!",t:2.5,x:CX,y:CY-55});}}
           if(s.dmgNums.length<30)s.dmgNums.push({x:CX,y:CY-20,v:bS?"SHIELD":"-"+Math.floor(coreDmg),col:bS?"#fbbf24":"#ef4444",t:1.2,big:true});
           for(let p=0;p<6;p++)s.parts.push({x:CX,y:CY,vx:(Math.random()-0.5)*60,vy:(Math.random()-0.5)*60,life:0.5,col:bS?"#fbbf24":"#ef4444",sz:3});s.zombies.splice(i,1);if(s.coreHp<=0){s.coreHp=0;s.go=true;endRun(false);}continue;}
-          for(const t of s.towers){if(t.hp<=0)continue;const tp=TT[t.tid];if(tp.eff!=="wall"&&tp.eff!=="barricade")continue;if(Math.hypot(z.x-t.x,z.y-t.y)<tp.range+z.sz){z.atk=t;z.atkT=0.3;if(tp.eff==="barricade")z.hp-=tp.dmg*s.twD*(z.armor||1)*(z.type!=="basic"||z.boss?s.specialD:1);break;}}}
+          for(const t of s.towers){if(t.hp<=0)continue;const tp=TT[t.tid];if(Math.hypot(z.x-t.x,z.y-t.y)<twBodyR(tp)+z.sz){z.atk=t;z.atkT=0.3;if(tp.eff==="barricade")z.hp-=tp.dmg*s.twD*(z.armor||1)*(z.type!=="basic"||z.boss?s.specialD:1);break;}}}
         const cd2=Math.hypot(z.x-s.mx,z.y-s.my);if(cd2<ecR){let dmg=ecD*dt*25*(z.type!=="basic"||z.boss?s.specialD:1);let isCrit=false;if(s.critCh>0&&Math.random()<s.critCh*dt*5){dmg*=5;isCrit=true;s.parts.push({x:z.x,y:z.y-z.sz-10,vx:0,vy:-20,life:0.5,col:"#ef4444",sz:3});}z.hp-=dmg;
           z._accDmg=(z._accDmg||0)+dmg;z._accT=(z._accT||0)+dt;
           if(z._accT>=0.3||isCrit){if(s.dmgNums.length<30)s.dmgNums.push({x:z.x+(Math.random()-0.5)*10,y:z.y-z.sz-5,v:Math.floor(z._accDmg)+(isCrit?" CRIT!":""),col:isCrit?"#ef4444":"#93c5fd",t:0.8,big:isCrit});z._accDmg=0;z._accT=0;}

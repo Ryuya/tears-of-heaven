@@ -217,6 +217,7 @@ const GlowBtn=({children,on,dis,color="#2563eb",style:sx,...p})=>(<button onClic
 /* ═══════════ MAIN GAME ═══════════ */
 export default function Game(){
   const cv=useRef(null),gs=useRef(null);
+  const pad=useRef({on:false,id:null,x:0,y:0,dx:0,dy:0});
   const assets=useRef({atlas:null,bg:null});
   const [phase,setPhase]=useState("hub");
   const [tears,setTears]=useState(0);
@@ -230,9 +231,11 @@ export default function Game(){
   const [runTab,setRunTab]=useState(0);
   const [grave,setGrave]=useState(null);
   const [ui,setUi]=useState({t:0,w:0,zn:0,tw:0,tm:MAX_TOWERS,pl:false,chp:100,cm:100,go:false,vic:false,nDrop:0,canRush:false,buffs:[]});
+  const [padUi,setPadUi]=useState({on:false,dx:0,dy:0});
   const [,bump]=useState(0);
 
   useEffect(()=>{let alive=true;for(const [k,src] of Object.entries(ASSET_PATHS)){const img=new Image();img.src=src;img.onload=()=>{if(alive){assets.current[k]=img;bump(v=>v+1);}};img.onerror=()=>{if(alive)assets.current[k]=null;};}return()=>{alive=false;};},[]);
+  useEffect(()=>{const stop=()=>{pad.current.on=false;pad.current.id=null;pad.current.dx=0;pad.current.dy=0;setPadUi({on:false,dx:0,dy:0});};window.addEventListener("blur",stop);return()=>window.removeEventListener("blur",stop);},[]);
 
   const maxSlots=()=>3+(rlv[8]||0);
   const sync=()=>{if(!gs.current)return;const s=gs.current;setUi({t:Math.floor(s.tears),w:s.wave,zn:s.zombies.length,tw:s.towers.length,tm:s.maxTowers,pl:s.placing,chp:Math.ceil(s.coreHp),cm:s.coreMax,go:s.go,vic:s.vic,nDrop:s.runDrops.length,canRush:!s.go&&!s.vic&&s.wave<s.tgt,buffs:s.buffs.map(b=>({...b}))});};
@@ -276,6 +279,7 @@ export default function Game(){
       const dt=Math.min((now-s.lt)/1000,0.05);s.lt=now;
       if(s.go||s.vic){render(ctx,s);ut+=dt;if(ut>0.2){ut=0;sync();}anim=requestAnimationFrame(loop);return;}
       const hasBuff=id=>s.buffs.some(b=>b.id===id);for(let i=s.buffs.length-1;i>=0;i--){s.buffs[i].rem-=dt;if(s.buffs[i].rem<=0)s.buffs.splice(i,1);}
+      if(pad.current.on){if(s.mx<0||s.my<0){s.mx=CX+80;s.my=CY;}s.mx=Math.max(8,Math.min(W-8,s.mx+pad.current.dx*240*dt));s.my=Math.max(8,Math.min(H-8,s.my+pad.current.dy*240*dt));}
       for(let i=s.clones.length-1;i>=0;i--){const c=s.clones[i];c.t-=dt;if(c.t<=0){s.clones.splice(i,1);continue;}c.x+=c.vx*dt;c.y+=c.vy*dt;const cxMin=150,cxMax=W-150,cyMin=100,cyMax=H-100;if(c.x<cxMin){c.x=cxMin;c.vx=-c.vx;}else if(c.x>cxMax){c.x=cxMax;c.vx=-c.vx;}if(c.y<cyMin){c.y=cyMin;c.vy=-c.vy;}else if(c.y>cyMax){c.y=cyMax;c.vy=-c.vy;}}
       const bF=hasBuff("fury")?3:1,bH=hasBuff("haste")?2:1,bR=hasBuff("rain")?2:1,bS=hasBuff("shield");
       let cBR=0,cBD=0;for(const t of s.towers){if(TT[t.tid].eff==="cursor"&&t.hp>0){cBR+=12;cBD+=0.35;}}
@@ -373,10 +377,16 @@ export default function Game(){
 
   const hM=e=>{if(!cv.current||!gs.current)return;const r=cv.current.getBoundingClientRect();gs.current.mx=(e.clientX-r.left)*(W/r.width);gs.current.my=(e.clientY-r.top)*(H/r.height);};
   const hL=()=>{if(gs.current)gs.current.mx=-300;};
-  const hC=e=>{const s=gs.current;if(!s||!s.placing||s.sel===null)return;const r=cv.current.getBoundingClientRect();const fx=(e.clientX-r.left)*(W/r.width),fy=(e.clientY-r.top)*(H/r.height);if(Math.hypot(fx-CX,fy-CY)<30)return;if(s.towers.length>=s.maxTowers)return;const tp=TT[s.sel];const cost=Math.floor(tp.cost*s.costP);if(s.tears>=cost){s.tears-=cost;s.towers.push({x:fx,y:fy,tid:tp.id,hp:Math.floor(tp.mhp*s.twH),cd:0});}};
+  const placeAt=(clientX,clientY)=>{const s=gs.current;if(!s||!s.placing||s.sel===null||!cv.current)return;const r=cv.current.getBoundingClientRect();const fx=(clientX-r.left)*(W/r.width),fy=(clientY-r.top)*(H/r.height);if(Math.hypot(fx-CX,fy-CY)<30)return;if(s.towers.length>=s.maxTowers)return;const tp=TT[s.sel];const cost=Math.floor(tp.cost*s.costP);if(s.tears>=cost){s.tears-=cost;s.towers.push({x:fx,y:fy,tid:tp.id,hp:Math.floor(tp.mhp*s.twH),cd:0});sync();}};
+  const hC=e=>placeAt(e.clientX,e.clientY);
+  const hTouch=e=>{if(!gs.current?.placing)return;e.preventDefault();const t=e.changedTouches[0];placeAt(t.clientX,t.clientY);};
   const selT=id=>{const s=gs.current;if(s.sel===id&&s.placing){s.placing=false;s.sel=null;}else{s.sel=id;s.placing=true;}sync();};
+  const padMove=(x,y)=>{const p=pad.current,dx=x-p.x,dy=y-p.y,d=Math.hypot(dx,dy),m=Math.min(1,d/34),nx=d?dx/d*m:0,ny=d?dy/d*m:0;p.dx=nx;p.dy=ny;setPadUi({on:true,dx:nx,dy:ny});};
+  const padStart=e=>{e.preventDefault();const t=e.changedTouches[0],r=e.currentTarget.getBoundingClientRect();pad.current={on:true,id:t.identifier,x:r.left+r.width/2,y:r.top+r.height/2,dx:0,dy:0};padMove(t.clientX,t.clientY);};
+  const padTouch=e=>{const t=[...e.changedTouches].find(t=>t.identifier===pad.current.id);if(!t)return;e.preventDefault();padMove(t.clientX,t.clientY);};
+  const padEnd=e=>{if(![...e.changedTouches].some(t=>t.identifier===pad.current.id))return;e.preventDefault();pad.current.on=false;pad.current.id=null;pad.current.dx=0;pad.current.dy=0;setPadUi({on:false,dx:0,dy:0});};
 
-  const css={root:{maxWidth:780,margin:"0 auto",fontFamily:"'Palatino Linotype','Book Antiqua','Georgia',serif",background:"#060a06",backgroundImage:`linear-gradient(rgba(3,8,7,0.88),rgba(3,8,7,0.94)),url(${ASSET_PATHS.bg})`,backgroundSize:"cover",border:"1px solid rgba(147,197,253,0.14)",borderRadius:10,overflow:"hidden",color:"#c8d6c8",boxShadow:"0 18px 50px rgba(0,0,0,0.55)"},panel:{background:"linear-gradient(180deg,rgba(11,18,11,0.92),rgba(9,14,9,0.96))",borderBottom:"1px solid #162016",backdropFilter:"blur(2px)"},hdr:{padding:"14px 20px",background:"radial-gradient(ellipse at 50% 0%,rgba(96,165,250,0.13),transparent 70%)",textAlign:"center",borderBottom:"1px solid rgba(147,197,253,0.12)"}};
+  const css={root:{width:"min(100vw,780px)",maxWidth:780,margin:"0 auto",fontFamily:"'Palatino Linotype','Book Antiqua','Georgia',serif",background:"#060a06",backgroundImage:`linear-gradient(rgba(3,8,7,0.88),rgba(3,8,7,0.94)),url(${ASSET_PATHS.bg})`,backgroundSize:"cover",border:"1px solid rgba(147,197,253,0.14)",borderRadius:10,overflow:"hidden",color:"#c8d6c8",boxShadow:"0 18px 50px rgba(0,0,0,0.55)"},panel:{background:"linear-gradient(180deg,rgba(11,18,11,0.92),rgba(9,14,9,0.96))",borderBottom:"1px solid #162016",backdropFilter:"blur(2px)"},hdr:{padding:"14px 20px",background:"radial-gradient(ellipse at 50% 0%,rgba(96,165,250,0.13),transparent 70%)",textAlign:"center",borderBottom:"1px solid rgba(147,197,253,0.12)"}};
 
   /* ═══ HUB ═══ */
   if(phase==="hub"){
@@ -473,7 +483,14 @@ export default function Game(){
         {(ui.go||ui.vic)&&<GlowBtn on={()=>setPhase("result")} color="#6366f1" style={{fontSize:10}}>結果</GlowBtn>}
       </div>
     </div>
-    <canvas ref={cv} width={W} height={H} style={{width:"100%",display:"block",cursor:ui.pl?"crosshair":"default"}} onMouseMove={hM} onMouseLeave={hL} onClick={hC}/>
+    <canvas ref={cv} width={W} height={H} style={{width:"100%",display:"block",cursor:ui.pl?"crosshair":"default",touchAction:"none"}} onMouseMove={hM} onMouseLeave={hL} onClick={hC} onTouchEnd={hTouch}/>
+    {!ui.go&&!ui.vic&&<div
+      onTouchStart={padStart} onTouchMove={padTouch} onTouchEnd={padEnd} onTouchCancel={padEnd}
+      style={{position:"absolute",left:14,bottom:70,width:92,height:92,borderRadius:46,background:"rgba(8,18,22,0.48)",border:"1px solid rgba(147,197,253,0.24)",boxShadow:"0 8px 22px rgba(0,0,0,0.45), inset 0 0 18px rgba(96,165,250,0.08)",display:"flex",alignItems:"center",justifyContent:"center",touchAction:"none",userSelect:"none"}}>
+      <div style={{width:56,height:56,borderRadius:28,border:"1px solid rgba(147,197,253,0.18)",background:"rgba(96,165,250,0.05)",position:"relative"}}>
+        <div style={{position:"absolute",left:18+padUi.dx*24,top:18+padUi.dy*24,width:20,height:20,borderRadius:10,background:padUi.on?"rgba(147,197,253,0.9)":"rgba(147,197,253,0.48)",boxShadow:"0 0 12px rgba(96,165,250,0.55)",transition:padUi.on?"none":"left .12s, top .12s, opacity .12s"}}/>
+      </div>
+    </div>}
     <div style={{display:"flex",background:"#090e09",borderTop:"1px solid #162016"}}>
       {["攻撃","支援","防御"].map((t,i)=>(<button key={i} onClick={()=>setRunTab(i)} style={{flex:1,padding:"6px 0",background:"transparent",color:runTab===i?["#4ade80","#a78bfa","#f59e0b"][i]:"#3a5a3a",border:"none",borderBottom:runTab===i?`2px solid ${["#4ade80","#a78bfa","#f59e0b"][i]}`:"2px solid transparent",fontSize:11,cursor:"pointer",fontWeight:runTab===i?700:400,letterSpacing:0.5,transition:"all .2s"}}>{t}</button>))}
     </div>
